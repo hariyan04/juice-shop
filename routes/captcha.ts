@@ -20,7 +20,18 @@ function captchas () {
     const secondOperator = operators[Math.floor((Math.random() * 3))]
 
     const expression = firstTerm.toString() + firstOperator + secondTerm.toString() + secondOperator + thirdTerm.toString()
-    const answer = eval(expression).toString() // eslint-disable-line no-eval
+    const compute = (x: number, op: string, y: number) => op === '*' ? x * y : (op === '+' ? x + y : x - y)
+    let numericAnswer: number
+    if (firstOperator === '*' && secondOperator === '*') {
+      numericAnswer = compute(compute(firstTerm, firstOperator, secondTerm), secondOperator, thirdTerm)
+    } else if (firstOperator === '*') {
+      numericAnswer = compute(compute(firstTerm, firstOperator, secondTerm), secondOperator, thirdTerm)
+    } else if (secondOperator === '*') {
+      numericAnswer = compute(firstTerm, firstOperator, compute(secondTerm, secondOperator, thirdTerm))
+    } else {
+      numericAnswer = compute(compute(firstTerm, firstOperator, secondTerm), secondOperator, thirdTerm)
+    }
+    const answer = numericAnswer.toString()
 
     const captcha = {
       captchaId,

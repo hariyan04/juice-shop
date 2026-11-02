@@ -33,7 +33,7 @@ module.exports = function getUserProfile () {
               if (!code) {
                 throw new Error('Username is null')
               }
-              username = eval(code) // eslint-disable-line no-eval
+              username = entities.encode(code)
             } catch (err) {
               username = '\\' + username
             }
@@ -53,6 +53,8 @@ module.exports = function getUserProfile () {
           template = template.replace(/_primLight_/g, theme.primLight)
           template = template.replace(/_primDark_/g, theme.primDark)
           template = template.replace(/_logo_/g, utils.extractFilename(config.get('application.logo')))
+          // Prevent user-controlled pug interpolation from being executed (avoid SSTI)
+          template = template.replace(/#\{/g, '\\#{')
           const fn = pug.compile(template)
           const CSP = `img-src 'self' ${user?.profileImage}; script-src 'self' 'unsafe-eval' https://code.getmdl.io http://ajax.googleapis.com`
           // @ts-expect-error FIXME type issue with string vs. undefined for username

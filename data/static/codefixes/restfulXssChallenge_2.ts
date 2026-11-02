@@ -56,6 +56,14 @@ ngAfterViewInit () {
 
   encodeProductDescription (tableData: any[]) {
     for (let i = 0; i < tableData.length; i++) {
-      tableData[i].description = tableData[i].description.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+      // Ensure we treat the value as a string and escape HTML special characters in the
+      // correct order (ampersand first) to avoid double-encoding bypasses.
+      const desc = String(tableData[i].description || '')
+      tableData[i].description = desc
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
     }
   }

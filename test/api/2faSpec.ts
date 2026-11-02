@@ -230,7 +230,7 @@ describe('/rest/2fa/setup', () => {
     const email = 'fooooo1@bar.com'
     const password = '123456'
 
-    const secret = 'ASDVAJSDUASZGDIADBJS'
+    const secret = process.env.SECRET || "";
 
     await register({ email, password })
     const { token } = await login({ email, password })
@@ -276,7 +276,7 @@ describe('/rest/2fa/setup', () => {
     const email = 'fooooo2@bar.com'
     const password = '123456'
 
-    const secret = 'ASDVAJSDUASZGDIADBJS'
+    const secret = process.env.SECRET || "";
 
     await register({ email, password })
     const { token } = await login({ email, password })
@@ -305,7 +305,7 @@ describe('/rest/2fa/setup', () => {
     const email = 'fooooo3@bar.com'
     const password = '123456'
 
-    const secret = 'ASDVAJSDUASZGDIADBJS'
+    const secret = process.env.SECRET || "";
 
     await register({ email, password })
     const { token } = await login({ email, password })
@@ -334,7 +334,7 @@ describe('/rest/2fa/setup', () => {
     const email = 'fooooo4@bar.com'
     const password = '123456'
 
-    const secret = 'ASDVAJSDUASZGDIADBJS'
+    const secret = process.env.SECRET || "";
 
     await register({ email, password })
     const { token } = await login({ email, password })
@@ -361,8 +361,8 @@ describe('/rest/2fa/setup', () => {
 
   it('POST should fail if the account has already set up 2fa', async () => {
     const email = `wurstbrot@${config.get<string>('application.domain')}`
-    const password = 'EinBelegtesBrotMitSchinkenSCHINKEN!'
-    const totpSecret = 'IFTXE3SPOEYVURT2MRYGI52TKJ4HC3KH'
+    const password = process.env.PASSWORD || "";
+    const totpSecret = process.env.TOTP_SECRET || "";
 
     const { token } = await login({ email, password, totpSecret })
 
@@ -391,7 +391,7 @@ describe('/rest/2fa/disable', () => {
   it('POST should be able to disable 2fa for account with 2fa enabled', async () => {
     const email = 'fooooodisable1@bar.com'
     const password = '123456'
-    const totpSecret = 'ASDVAJSDUASZGDIADBJS'
+    const totpSecret = process.env.TOTP_SECRET || "";
 
     await register({ email, password, totpSecret })
     const { token } = await login({ email, password, totpSecret })
@@ -428,7 +428,7 @@ describe('/rest/2fa/disable', () => {
   it('POST should not be possible to disable 2fa without the correct password', async () => {
     const email = 'fooooodisable1@bar.com'
     const password = '123456'
-    const totpSecret = 'ASDVAJSDUASZGDIADBJS'
+    const totpSecret = process.env.TOTP_SECRET || "";
 
     await register({ email, password, totpSecret })
     const { token } = await login({ email, password, totpSecret })

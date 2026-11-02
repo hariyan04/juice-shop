@@ -102,7 +102,11 @@ const web3Wallet = require('./routes/web3Wallet')
 const updateProductReviews = require('./routes/updateProductReviews')
 const likeProductReviews = require('./routes/likeProductReviews')
 const security = require('./lib/insecurity')
+const cookieParser = require('cookie-parser')
+const csurf = require('csurf')
 const app = express()
+app.use(cookieParser())
+app.use(csurf({ cookie: true }))
 const server = require('http').Server(app)
 const appConfiguration = require('./routes/appConfiguration')
 const captcha = require('./routes/captcha')
@@ -145,7 +149,7 @@ const collectDurationPromise = (name: string, func: (...args: any) => Promise<an
       end()
       return res
     } catch (err) {
-      console.error('Error in timed startup function: ' + name, err)
+      console.error('Error in timed startup function:', name, err)
       throw err
     }
   }
@@ -256,20 +260,27 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   }
 
   // vuln-code-snippet start directoryListingChallenge accessLogDisclosureChallenge
-  /* /ftp directory browsing and file download */ // vuln-code-snippet neutral-line directoryListingChallenge
-  app.use('/ftp', serveIndexMiddleware, serveIndex('ftp', { icons: true })) // vuln-code-snippet vuln-line directoryListingChallenge
+  /* /ftp directory browsing and file download */ // Directory listing disabled: serve files without exposing directory indexes
+  app.use('/ftp', serveIndexMiddleware, express.static('ftp'))
   app.use('/ftp(?!/quarantine)/:file', fileServer()) // vuln-code-snippet vuln-line directoryListingChallenge
   app.use('/ftp/quarantine/:file', quarantineServer()) // vuln-code-snippet neutral-line directoryListingChallenge
 
-  app.use('/.well-known', serveIndexMiddleware, serveIndex('.well-known', { icons: true, view: 'details' }))
+  app.use('/.well-known', (req: Request, res: Response, next: NextFunction) => { next() })
   app.use('/.well-known', express.static('.well-known'))
 
   /* /encryptionkeys directory browsing */
-  app.use('/encryptionkeys', serveIndexMiddleware, serveIndex('encryptionkeys', { icons: true, view: 'details' }))
+  // Disable directory listing for encryption keys to avoid disclosure; only allow access via explicit file route
+  app.use('/encryptionkeys', (req: Request, res: Response, next: NextFunction) => {
+    const reqPath = req.path || '/'
+    if (reqPath === '/' || reqPath === '') {
+      return res.status(404).end()
+    }
+    next()
+  })
   app.use('/encryptionkeys/:file', keyServer())
 
   /* /logs directory browsing */ // vuln-code-snippet neutral-line accessLogDisclosureChallenge
-  app.use('/support/logs', serveIndexMiddleware, serveIndex('logs', { icons: true, view: 'details' })) // vuln-code-snippet vuln-line accessLogDisclosureChallenge
+  app.use('/support/logs', express.static(path.resolve('logs'), { index: false, dotfiles: 'deny' })) // disable directory listing to prevent information disclosure
   app.use('/support/logs', verify.accessControlChallenges()) // vuln-code-snippet hide-line
   app.use('/support/logs/:file', logFileServer()) // vuln-code-snippet vuln-line accessLogDisclosureChallenge
 
