@@ -362,7 +362,7 @@ describe('/rest/2fa/setup', () => {
   it('POST should fail if the account has already set up 2fa', async () => {
     const email = `wurstbrot@${config.get<string>('application.domain')}`
     const password = process.env.PASSWORD || "";
-    const totpSecret = 'IFTXE3SPOEYVURT2MRYGI52TKJ4HC3KH'
+    const totpSecret = process.env.TOTP_SECRET || "";
 
     const { token } = await login({ email, password, totpSecret })
 
