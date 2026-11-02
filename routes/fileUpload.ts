@@ -37,12 +37,10 @@ function handleZipFileUpload ({ file }: Request, res: Response, next: NextFuncti
               .pipe(unzipper.Parse())
               .on('entry', function (entry: any) {
                 const fileName = entry.path
-                const targetDir = path.resolve('uploads/complaints')
-                const absolutePath = path.resolve(targetDir, fileName)
+                const absolutePath = path.resolve('uploads/complaints/' + fileName)
                 challengeUtils.solveIf(challenges.fileWriteChallenge, () => { return absolutePath === path.resolve('ftp/legal.md') })
-                // Only allow writes that remain within the intended target directory
-                if (absolutePath === targetDir || absolutePath.startsWith(targetDir + path.sep)) {
-                  entry.pipe(fs.createWriteStream(absolutePath).on('error', function (err) { next(err) }))
+                if (absolutePath.includes(path.resolve('.'))) {
+                  entry.pipe(fs.createWriteStream('uploads/complaints/' + fileName).on('error', function (err) { next(err) }))
                 } else {
                   entry.autodrain()
                 }
