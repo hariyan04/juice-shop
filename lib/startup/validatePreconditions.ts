@@ -117,16 +117,7 @@ export const checkIfPortIsAvailable = async (port: number | string) => {
 export const checkIfRequiredFileExists = async (pathRelativeToProjectRoot: string) => {
   const fileName = pathRelativeToProjectRoot.substr(pathRelativeToProjectRoot.lastIndexOf('/') + 1)
 
-  const resolvedPath = path.resolve(pathRelativeToProjectRoot)
-  const projectRoot = path.resolve(process.cwd())
-
-  // Ensure the resolved path is inside the project root to prevent path traversal
-  if (resolvedPath !== projectRoot && !resolvedPath.startsWith(projectRoot + path.sep)) {
-    logger.warn(`Required file ${colors.bold(fileName)} is outside the project root and will not be accessed (${colors.red('NOT OK')})`)
-    return false
-  }
-
-  return await access(resolvedPath).then(() => {
+  return await access(path.resolve(pathRelativeToProjectRoot)).then(() => {
     logger.info(`Required file ${colors.bold(fileName)} is present (${colors.green('OK')})`)
     return true
   }).catch(() => {
