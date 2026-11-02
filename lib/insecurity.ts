@@ -155,6 +155,9 @@ export const roles = {
 }
 
 export const deluxeToken = (email: string) => {
+  if (!privateKey) {
+    throw new Error('PRIVATE_KEY environment variable is not set')
+  }
   const hmac = crypto.createHmac('sha256', privateKey)
   return hmac.update(email + roles.deluxe).digest('hex')
 }
