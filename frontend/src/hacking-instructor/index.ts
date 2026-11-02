@@ -129,7 +129,9 @@ function loadHint (hint: ChallengeHint): HTMLElement {
   cancelButton.style.backgroundColor = 'transparent'
   cancelButton.style.border = 'none'
   cancelButton.style.color = 'white'
-  cancelButton.innerHTML = '<div style;">&times;</div>'
+  const closeDiv = document.createElement('div')
+  closeDiv.textContent = '×'
+  cancelButton.appendChild(closeDiv)
   cancelButton.style.fontSize = 'large'
   cancelButton.title = 'Cancel the tutorial'
   cancelButton.style.position = 'relative'
