@@ -230,7 +230,7 @@ describe('/rest/2fa/setup', () => {
     const email = 'fooooo1@bar.com'
     const password = '123456'
 
-    const secret = 'ASDVAJSDUASZGDIADBJS'
+    const secret = process.env.SECRET || "";
 
     await register({ email, password })
     const { token } = await login({ email, password })
