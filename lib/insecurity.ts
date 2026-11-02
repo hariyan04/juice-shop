@@ -40,7 +40,7 @@ interface IAuthenticatedUsers {
   updateFrom: (req: Request, user: ResponseWithUser) => any
 }
 
-export const hash = (data: string) => crypto.createHash('md5').update(data).digest('hex')
+export const hash = (data: string) => crypto.createHash('sha256').update(data).digest('hex')
 export const hmac = (data: string) => crypto.createHmac('sha256', process.env.HMAC_KEY || '').update(data).digest('hex')
 
 export const cutOffPoisonNullByte = (str: string) => {
