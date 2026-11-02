@@ -24,6 +24,16 @@ let trainingFile = config.get<string>('application.chatBot.trainingData')
 let testCommand: string
 export let bot: Bot | null = null
 
+// Escape HTML special characters to avoid returning raw HTML in chatbot responses
+function escapeHtml (input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export async function initialize () {
   if (utils.isUrl(trainingFile)) {
     const file = utils.extractFilename(trainingFile)
@@ -195,7 +205,7 @@ export const status = function status () {
       bot.addUser(`${user.id}`, username)
       res.status(200).json({
         status: bot.training.state,
-        body: bot.training.state ? bot.greet(`${user.id}`) : `${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`
+        body: bot.training.state ? escapeHtml(bot.greet(`${user.id}`)) : escapeHtml(`${config.get<string>('application.chatBot.name')} isn't ready at the moment, please wait while I set things up`)
       })
     } catch (err) {
       next(new Error('Blocked illegal activity by ' + req.socket.remoteAddress))
