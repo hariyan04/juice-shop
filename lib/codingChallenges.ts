@@ -62,7 +62,7 @@ function getCodingChallengeFromFileContent (source: string, challengeKey: string
   // escape any regex metacharacters in challengeKey before using in dynamic regexes
   const escapeForRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const safeChallengeKey = escapeForRegExp(challengeKey)
-  const snippets = source.match(`[/#]{0,2} vuln-code-snippet start.*${challengeKey}([^])*vuln-code-snippet end.*${challengeKey}`)
+  const snippets = source.match(`[/#]{0,2} vuln-code-snippet start.*${safeChallengeKey}([^])*vuln-code-snippet end.*${safeChallengeKey}`)
   if (snippets == null) {
     throw new BrokenBoundary('Broken code snippet boundaries for: ' + challengeKey)
   }
