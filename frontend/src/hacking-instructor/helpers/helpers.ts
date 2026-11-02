@@ -31,11 +31,16 @@ export function waitForInputToHaveValue (inputSelector: string, value: string, o
         config = json.config
       }
       const propertyChain = options.replacement[1].split('.')
-      let replacementValue = config
-      for (const property of propertyChain) {
-        replacementValue = replacementValue[property]
+      // Prevent prototype pollution by disallowing dangerous property names in the chain
+      const forbiddenProps = ['__proto__', 'prototype', 'constructor']
+      if (!propertyChain.some((p: string) => forbiddenProps.includes(p))) {
+        let replacementValue = config
+        for (const property of propertyChain) {
+          replacementValue = replacementValue[property]
+          if (replacementValue === undefined) break
+        }
+        value = value.replace(options.replacement[0], replacementValue)
       }
-      value = value.replace(options.replacement[0], replacementValue)
     }
 
     while (true) {
