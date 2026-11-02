@@ -104,24 +104,7 @@ function loadHint (hint: ChallengeHint): HTMLElement {
 
   const textBox = document.createElement('span')
   textBox.style.flexGrow = '2'
-  // Sanitize the HTML produced by snarkdown to prevent XSS: remove script/style
-  // elements and any attributes that could contain event handlers or javascript: URLs.
-  const parser = new DOMParser()
-  const parsed = parser.parseFromString(snarkdown(hint.text), 'text/html')
-  // Remove script and style elements
-  parsed.querySelectorAll('script, style').forEach(el => el.remove())
-  // Remove dangerous attributes like on* and javascript: URLs
-  parsed.querySelectorAll('*').forEach((el) => {
-    // Copy attributes first to avoid mutation issues while iterating
-    Array.from(el.attributes).forEach(attr => {
-      const name = attr.name.toLowerCase()
-      const value = attr.value.trim().toLowerCase()
-      if (name.startsWith('on') || value.startsWith('javascript:')) {
-        el.removeAttribute(attr.name)
-      }
-    })
-  })
-  textBox.innerHTML = parsed.body.innerHTML
+  textBox.innerHTML = snarkdown(hint.text)
 
   const cancelButton = document.createElement('button')
   cancelButton.id = 'cancelButton'
