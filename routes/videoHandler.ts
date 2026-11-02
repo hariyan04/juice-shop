@@ -66,7 +66,7 @@ exports.promotionVideo = () => {
       template = template.replace(/_primDark_/g, theme.primDark)
       const fn = pug.compile(template)
       let compiledTemplate = fn()
-      const safeSubs = entities.encode(subs)
+      const safeSubs = subs.replace(/<\/script>/gi, '<\\/script>')
       compiledTemplate = compiledTemplate.replace('<script id="subtitle"></script>', '<script id="subtitle" type="text/vtt" data-label="English" data-lang="en">' + safeSubs + '</script>')
       res.send(compiledTemplate)
     })
