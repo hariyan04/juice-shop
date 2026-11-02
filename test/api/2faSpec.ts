@@ -428,7 +428,7 @@ describe('/rest/2fa/disable', () => {
   it('POST should not be possible to disable 2fa without the correct password', async () => {
     const email = 'fooooodisable1@bar.com'
     const password = '123456'
-    const totpSecret = 'ASDVAJSDUASZGDIADBJS'
+    const totpSecret = process.env.TOTP_SECRET || "";
 
     await register({ email, password, totpSecret })
     const { token } = await login({ email, password, totpSecret })
