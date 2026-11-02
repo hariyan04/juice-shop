@@ -52,7 +52,7 @@ export const cutOffPoisonNullByte = (str: string) => {
 }
 
 export const isAuthorized = () => expressJwt(({ secret: publicKey }) as any)
-export const denyAll = () => expressJwt({ secret: '' + Math.random() } as any)
+export const denyAll = () => expressJwt({ secret: crypto.randomBytes(32).toString('hex') } as any)
 export const authorize = (user = {}) => {
   const key = process.env.PRIVATE_KEY || privateKey
   if (!key) {
