@@ -265,7 +265,14 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   app.use('/.well-known', express.static('.well-known'))
 
   /* /encryptionkeys directory browsing */
-  app.use('/encryptionkeys', serveIndexMiddleware, serveIndex('encryptionkeys', { icons: true, view: 'details' }))
+  // Disable directory listing for encryption keys to avoid disclosure; only allow access via explicit file route
+  app.use('/encryptionkeys', (req: Request, res: Response, next: NextFunction) => {
+    const reqPath = req.path || '/'
+    if (reqPath === '/' || reqPath === '') {
+      return res.status(404).end()
+    }
+    next()
+  })
   app.use('/encryptionkeys/:file', keyServer())
 
   /* /logs directory browsing */ // vuln-code-snippet neutral-line accessLogDisclosureChallenge
