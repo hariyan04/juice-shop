@@ -19,19 +19,50 @@ module.exports = function profileImageUrlUpload () {
       if (url.match(/(.)*solve\/challenges\/server-side(.)*/) !== null) req.app.locals.abused_ssrf_bug = true
       const loggedInUser = security.authenticatedUsers.get(req.cookies.token)
       if (loggedInUser) {
-        const imageRequest = request
-          .get(url)
-          .on('error', function (err: unknown) {
-            UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
-            logger.warn(`Error retrieving user profile image: ${utils.getErrorMessage(err)}; using image link directly`)
-          })
-          .on('response', function (res: Response) {
-            if (res.statusCode === 200) {
-              const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
-              imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
-              UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch((error: Error) => { next(error) })
-            } else UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
-          })
+        // Validate URL to prevent SSRF: allow only http(s) and disallow localhost or private IP ranges
+        let allowFetch = true
+        try {
+          const parsed = new URL(url)
+          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            allowFetch = false
+          } else {
+            const host = parsed.hostname
+            // disallow literal localhost and loopback
+            if (host === 'localhost' || host === '::1' || host === '127.0.0.1') {
+              allowFetch = false
+            }
+            // disallow common private IP ranges
+            const ipv4Match = host.match(/^((?:\d{1,3}\.){3}\d{1,3})$/)
+            if (ipv4Match) {
+              const parts = host.split('.').map((p) => parseInt(p, 10))
+              const [a, b] = parts
+              if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)) {
+                allowFetch = false
+              }
+            }
+          }
+        } catch (e) {
+          allowFetch = false
+        }
+
+        if (!allowFetch) {
+          // Do not perform the server-side request; fall back to using the provided URL directly
+          UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
+        } else {
+          const imageRequest = request
+            .get(url)
+            .on('error', function (err: unknown) {
+              UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
+              logger.warn(`Error retrieving user profile image: ${utils.getErrorMessage(err)}; using image link directly`)
+            })
+            .on('response', function (res: Response) {
+              if (res.statusCode === 200) {
+                const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
+                imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
+                UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch((error: Error) => { next(error) })
+              } else UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
+            })
+        }
       } else {
         next(new Error('Blocked illegal activity by ' + req.socket.remoteAddress))
       }
