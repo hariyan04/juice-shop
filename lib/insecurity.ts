@@ -53,7 +53,13 @@ export const cutOffPoisonNullByte = (str: string) => {
 
 export const isAuthorized = () => expressJwt(({ secret: publicKey }) as any)
 export const denyAll = () => expressJwt({ secret: '' + Math.random() } as any)
-export const authorize = (user = {}) => jwt.sign(user, privateKey, { expiresIn: '6h', algorithm: 'RS256' })
+export const authorize = (user = {}) => {
+  const key = process.env.PRIVATE_KEY || privateKey
+  if (!key) {
+    throw new Error('PRIVATE_KEY not set')
+  }
+  return jwt.sign(user, key, { expiresIn: '6h', algorithm: 'RS256' })
+}
 export const verify = (token: string) => token ? (jws.verify as ((token: string, secret: string) => boolean))(token, publicKey) : false
 export const decode = (token: string) => { return jws.decode(token)?.payload }
 
